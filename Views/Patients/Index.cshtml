@@ -1,0 +1,91 @@
+@model MedicalPortal.Models.PatientsFilterViewModel
+@{
+    ViewData["Title"] = "Пациенты";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h2 class="fw-bold mb-0">Пациенты</h2>
+        <p class="text-muted mb-0">Учёт пациентов, история приёмов и фильтрация по диагнозу, возрасту и имени (Задание №3)</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Добавить пациента</a>
+</div>
+
+<form method="get" class="filter-panel mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Диагноз</label>
+            <select name="diagnosis" class="form-select">
+                <option value="">Все диагнозы</option>
+                @foreach (var diag in Model.AvailableDiagnoses)
+                {
+                    <option value="@diag" selected="@(Model.Diagnosis == diag)">@diag</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Поиск по имени / диагнозу</label>
+            <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="ФИО или диагноз" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Возраст от</label>
+            <input type="number" name="minAge" value="@Model.MinAge" min="0" max="130" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Возраст до</label>
+            <input type="number" name="maxAge" value="@Model.MaxAge" min="0" max="130" class="form-control" />
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Сброс</a>
+        </div>
+    </div>
+</form>
+
+<div class="portal-card p-3">
+    @if (!Model.Patients.Any())
+    {
+        <div class="alert alert-info mb-0">Пациенты по заданным критериям не найдены.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Имя</th>
+                        <th>Возраст</th>
+                        <th>Текущий диагноз</th>
+                        <th>Вывод ShowPatientInfo()</th>
+                        <th>Приёмов</th>
+                        <th class="text-end">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var patient in Model.Patients)
+                    {
+                        <tr>
+                            <td class="fw-semibold">
+                                <a asp-action="Details" asp-route-id="@patient.Id" class="text-decoration-none">@patient.Name</a>
+                            </td>
+                            <td>@patient.Age лет</td>
+                            <td><span class="diagnosis-pill">@patient.Diagnosis</span></td>
+                            <td class="small text-muted">@patient.ShowPatientInfo()</td>
+                            <td>
+                                <span class="badge bg-secondary">@patient.Appointments.Count</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Details" asp-route-id="@patient.Id" class="btn btn-sm btn-outline-info">Карточка</a>
+                                <a asp-action="Edit" asp-route-id="@patient.Id" class="btn btn-sm btn-outline-primary">Изменить</a>
+                                <form asp-action="Delete" asp-route-id="@patient.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Удалить пациента @patient.Name и все его записи?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

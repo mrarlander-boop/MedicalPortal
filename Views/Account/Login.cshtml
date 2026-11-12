@@ -1,0 +1,69 @@
+@model MedicalPortal.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Вход для врача";
+}
+
+<div class="row g-4 justify-content-center">
+    <div class="col-md-5">
+        <div class="portal-card p-4">
+            <h3 class="fw-bold mb-3">Вход в аккаунт врача</h3>
+            <form asp-action="Login" method="post">
+                <input type="hidden" asp-for="ReturnUrl" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Login" class="form-label fw-semibold"></label>
+                    <input asp-for="Login" id="loginInput" class="form-control" placeholder="Например: neurologist" />
+                    <span asp-validation-for="Login" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label fw-semibold"></label>
+                    <input asp-for="Password" id="passwordInput" class="form-control" placeholder="Пароль" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mb-3">Войти</button>
+            </form>
+
+            <div class="text-center small">
+                Нет аккаунта врача?
+                <a asp-action="RegisterDoctor">Создать нового врача и аккаунт</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="portal-card p-4">
+            <h5 class="fw-bold mb-2">Готовые аккаунты врачей (пароль: <code>1234</code>)</h5>
+            <p class="small text-muted mb-3">Нажмите «Подставить», чтобы быстро войти под нужным специалистом и проверить постановку его диагноза.</p>
+            <div class="list-group list-group-flush">
+                @foreach (var doc in Model.DemoDoctors)
+                {
+                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold">@doc.Name (@doc.Specialization)</div>
+                            <div class="small text-muted">
+                                Логин: <code>@doc.Login</code> | Диагноз врача: <span class="diagnosis-pill">@doc.DefaultDiagnosis</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                onclick="fillCredentials('@doc.Login', '1234')">
+                            Подставить
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function fillCredentials(login, password) {
+            document.getElementById('loginInput').value = login;
+            document.getElementById('passwordInput').value = password;
+        }
+    </script>
+}

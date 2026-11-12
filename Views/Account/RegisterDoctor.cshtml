@@ -1,0 +1,87 @@
+@model MedicalPortal.Models.RegisterDoctorViewModel
+@using MedicalPortal.Services
+@{
+    ViewData["Title"] = "Создать врача и аккаунт";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="portal-card p-4">
+            <h3 class="fw-bold mb-2">Регистрация нового врача</h3>
+            <p class="text-muted small mb-4">Создаётся врач выбранной специальности, его личный аккаунт и собственный диагноз, который он будет ставить пациентам на приёме.</p>
+
+            <form asp-action="RegisterDoctor" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="SpecializationKey" class="form-label fw-semibold"></label>
+                        <select asp-for="SpecializationKey" id="specSelect" class="form-select" onchange="suggestDiagnosis()">
+                            @foreach (var spec in DoctorFactory.Specializations)
+                            {
+                                <option value="@spec.Key" data-diag="@spec.SuggestedDiagnosis">@spec.Label</option>
+                            }
+                        </select>
+                        <span asp-validation-for="SpecializationKey" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Experience" class="form-label fw-semibold"></label>
+                        <input asp-for="Experience" type="number" class="form-control" min="0" max="70" />
+                        <span asp-validation-for="Experience" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Name" class="form-label fw-semibold"></label>
+                        <input asp-for="Name" class="form-control" placeholder="Например: Соколова Анна Михайловна" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="DefaultDiagnosis" class="form-label fw-semibold"></label>
+                        <input asp-for="DefaultDiagnosis" id="diagInput" class="form-control" placeholder="Например: Мигрень / Вегетососудистая дистония" />
+                        <span asp-validation-for="DefaultDiagnosis" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Login" class="form-label fw-semibold"></label>
+                        <input asp-for="Login" class="form-control" placeholder="Логин для входа" />
+                        <span asp-validation-for="Login" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Password" class="form-label fw-semibold"></label>
+                        <input asp-for="Password" class="form-control" placeholder="Минимум 4 символа" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Повторите пароль" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Создать врача и войти</button>
+                    <a asp-controller="Doctors" asp-action="Index" class="btn btn-outline-secondary">К списку врачей</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function suggestDiagnosis() {
+            const select = document.getElementById('specSelect');
+            const diagInput = document.getElementById('diagInput');
+            const selected = select.options[select.selectedIndex];
+            if (!diagInput.value) {
+                diagInput.value = selected.getAttribute('data-diag') || '';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', suggestDiagnosis);
+    </script>
+}

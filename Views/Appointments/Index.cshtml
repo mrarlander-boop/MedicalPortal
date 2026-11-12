@@ -1,0 +1,156 @@
+@model MedicalPortal.Models.AppointmentsFilterViewModel
+@using MedicalPortal.Services
+@{
+    ViewData["Title"] = "Записи на приём";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h2 class="fw-bold mb-0">Записи на приём</h2>
+        <p class="text-muted mb-0">Запись пациентов к врачам, перенос, отмена и фильтрация (Задание №4)</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Новая запись на приём</a>
+</div>
+
+<form method="get" class="filter-panel mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Специальность</label>
+            <select name="specialization" class="form-select">
+                <option value="">Все специальности</option>
+                @foreach (var spec in DoctorFactory.Specializations)
+                {
+                    <option value="@spec.Label" selected="@(Model.Specialization == spec.Label)">@spec.Label</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Врач</label>
+            <select name="doctorId" class="form-select">
+                <option value="">Все врачи</option>
+                @foreach (var doc in Model.Doctors)
+                {
+                    <option value="@doc.Id" selected="@(Model.DoctorId == doc.Id)">@doc.Name (@doc.Specialization)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Диагноз</label>
+            <select name="diagnosis" class="form-select">
+                <option value="">Все диагнозы</option>
+                @foreach (var diag in Model.AvailableDiagnoses)
+                {
+                    <option value="@diag" selected="@(Model.Diagnosis == diag)">@diag</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Статус</label>
+            <select name="status" class="form-select">
+                <option value="">Любой статус</option>
+                <option value="Запланирован" selected="@(Model.Status == "Запланирован")">Запланирован</option>
+                <option value="Завершён" selected="@(Model.Status == "Завершён")">Завершён</option>
+                <option value="Отменён" selected="@(Model.Status == "Отменён")">Отменён</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Пациент</label>
+            <input type="text" name="patientSearch" value="@Model.PatientSearch" class="form-control" placeholder="Имя пациента" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Дата от</label>
+            <input type="date" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Дата до</label>
+            <input type="date" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Сброс</a>
+        </div>
+    </div>
+</form>
+
+<div class="portal-card p-3">
+    @if (!Model.Appointments.Any())
+    {
+        <div class="alert alert-info mb-0">Записи на приём по заданным фильтрам не найдены.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Дата приёма</th>
+                        <th>Пациент</th>
+                        <th>Врач</th>
+                        <th>Диагноз</th>
+                        <th>Статус / Осмотр</th>
+                        <th>ShowAppointment()</th>
+                        <th class="text-end">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var app in Model.Appointments)
+                    {
+                        var shownDiag = !string.IsNullOrWhiteSpace(app.AssignedDiagnosis)
+                            ? app.AssignedDiagnosis
+                            : app.Patient?.Diagnosis;
+                        var statusBadge = app.Status switch
+                        {
+                            "Завершён" => "bg-success",
+                            "Отменён" => "bg-secondary",
+                            _ => "bg-warning text-dark"
+                        };
+                        <tr>
+                            <td class="fw-semibold text-nowrap">@app.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                @if (app.Patient != null)
+                                {
+                                    <a asp-controller="Patients" asp-action="Details" asp-route-id="@app.PatientId" class="fw-semibold text-decoration-none">@app.Patient.Name</a>
+                                    <div class="small text-muted">@app.Patient.Age лет</div>
+                                }
+                            </td>
+                            <td>
+                                <div>@app.Doctor?.Name</div>
+                                @if (app.Doctor != null)
+                                {
+                                    <span class="spec-badge @DoctorFactory.GetBadgeCssClass(app.Doctor.Specialization)">@app.Doctor.Specialization</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(shownDiag))
+                                {
+                                    <span class="diagnosis-pill">@shownDiag</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @statusBadge">@app.Status</span>
+                                @if (!string.IsNullOrWhiteSpace(app.ReceptionReport))
+                                {
+                                    <div class="small text-muted mt-1">@app.ReceptionReport</div>
+                                }
+                            </td>
+                            <td class="small text-muted">@app.ShowAppointment()</td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Edit" asp-route-id="@app.Id" class="btn btn-sm btn-outline-primary">Перенести</a>
+                                @if (app.Status == "Запланирован")
+                                {
+                                    <form asp-action="Cancel" asp-route-id="@app.Id" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">Отменить</button>
+                                    </form>
+                                }
+                                <form asp-action="Delete" asp-route-id="@app.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Удалить запись №@app.Id?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

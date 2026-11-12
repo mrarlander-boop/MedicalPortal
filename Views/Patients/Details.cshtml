@@ -1,0 +1,93 @@
+@model MedicalPortal.Models.PatientDetailsViewModel
+@using MedicalPortal.Services
+@{
+    ViewData["Title"] = $"Карточка: {Model.Patient.Name}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="fw-bold mb-0">@Model.Patient.Name</h2>
+        <p class="text-muted mb-0">Электронная карточка пациента и история приёмов</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Patient.Id" class="btn btn-outline-primary">Редактировать</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">К списку пациентов</a>
+    </div>
+</div>
+
+<div class="portal-card p-4 mb-4">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="text-muted small">Возраст</div>
+            <div class="fs-5 fw-semibold">@Model.Patient.Age лет</div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small">Текущий диагноз</div>
+            <div><span class="diagnosis-pill">@Model.Patient.Diagnosis</span></div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small">ShowPatientInfo()</div>
+            <div class="small text-muted">@Model.Patient.ShowPatientInfo()</div>
+        </div>
+    </div>
+</div>
+
+<div class="portal-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0">История приёмов (@Model.Appointments.Count)</h4>
+        <a asp-controller="Appointments" asp-action="Create" class="btn btn-sm btn-primary">+ Записать на приём</a>
+    </div>
+    @if (!Model.Appointments.Any())
+    {
+        <div class="alert alert-info mb-0">У этого пациента пока нет записей на приём.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Дата</th>
+                        <th>Врач</th>
+                        <th>Поставленный диагноз</th>
+                        <th>Результат осмотра</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var app in Model.Appointments)
+                    {
+                        var statusBadge = app.Status switch
+                        {
+                            "Завершён" => "bg-success",
+                            "Отменён" => "bg-secondary",
+                            _ => "bg-warning text-dark"
+                        };
+                        <tr>
+                            <td class="fw-semibold text-nowrap">@app.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                <div>@app.Doctor?.Name</div>
+                                @if (app.Doctor != null)
+                                {
+                                    <span class="spec-badge @DoctorFactory.GetBadgeCssClass(app.Doctor.Specialization)">@app.Doctor.Specialization</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(app.AssignedDiagnosis))
+                                {
+                                    <span class="diagnosis-pill">@app.AssignedDiagnosis</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                            <td class="small text-muted">@(string.IsNullOrWhiteSpace(app.ReceptionReport) ? "Ожидается приём" : app.ReceptionReport)</td>
+                            <td><span class="badge @statusBadge">@app.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

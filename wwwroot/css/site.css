@@ -1,0 +1,101 @@
+html {
+  font-size: 15px;
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  background-color: #f4f7fb;
+  color: #1e293b;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  margin-bottom: 70px;
+}
+
+.portal-navbar {
+  background: linear-gradient(135deg, #0f4c81 0%, #0d9488 100%);
+}
+
+.portal-navbar .navbar-brand,
+.portal-navbar .nav-link {
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+.portal-navbar .nav-link:hover {
+  opacity: 0.85;
+}
+
+.portal-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.stat-card {
+  border: none;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  transition: transform 0.15s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.spec-badge {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.spec-therapist {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.spec-cardiologist {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.spec-dentist {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.spec-neurologist {
+  background-color: #ede9fe;
+  color: #6d28d9;
+}
+
+.diagnosis-pill {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 8px;
+  background-color: #f1f5f9;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid #cbd5e1;
+}
+
+.filter-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 55px;
+  background: #ffffff;
+}

@@ -1,0 +1,140 @@
+﻿@model MedicalPortal.Models.HomeDashboardViewModel
+@using MedicalPortal.Services
+@{
+    ViewData["Title"] = "Главная";
+}
+
+<div class="p-4 p-md-5 mb-4 rounded-4 text-white shadow-sm" style="background: linear-gradient(135deg, #0f4c81 0%, #0d9488 100%);">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="display-6 fw-bold mb-2">Медицинский портал</h1>
+            <p class="lead mb-3">
+                Система управления врачами, аккаунтами специалистов с профильными диагнозами, пациентами и записями на приём на базе ASP.NET Core 8 и SQLite.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-controller="Appointments" asp-action="Create" class="btn btn-light fw-semibold text-primary">
+                    + Записаться на приём
+                </a>
+                <a asp-controller="Doctors" asp-action="Index" class="btn btn-outline-light">
+                    Список врачей и фильтрация
+                </a>
+                <a asp-controller="Account" asp-action="RegisterDoctor" class="btn btn-warning fw-semibold text-dark">
+                    Создать аккаунт врача
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3">
+            <div class="text-muted small">Врачей в системе</div>
+            <div class="fs-2 fw-bold text-primary">@Model.DoctorsCount</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3">
+            <div class="text-muted small">Пациентов</div>
+            <div class="fs-2 fw-bold text-success">@Model.PatientsCount</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3">
+            <div class="text-muted small">Всего записей</div>
+            <div class="fs-2 fw-bold text-info">@Model.AppointmentsCount</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3">
+            <div class="text-muted small">Приёмов завершено</div>
+            <div class="fs-2 fw-bold text-dark">@Model.CompletedAppointmentsCount</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="portal-card p-4 h-100">
+            <h4 class="fw-bold mb-3">Демонстрация заданий №1–4 (ООП)</h4>
+            <div class="mb-3">
+                <div class="fw-semibold text-primary">Задания №1 и №2: Doctor, Specialization и Reception()</div>
+                <ul class="list-group list-group-flush mt-2">
+                    @foreach (var doc in Model.ShowcaseDoctors)
+                    {
+                        <li class="list-group-item px-0">
+                            <span class="spec-badge @DoctorFactory.GetBadgeCssClass(doc.Specialization)">@doc.Specialization</span>
+                            <strong>@doc.Name</strong> (стаж @doc.Experience лет)
+                            <div class="small text-muted mt-1">
+                                <code>Reception()</code> → «@doc.Reception()» | Ставит диагноз: <span class="diagnosis-pill">@doc.DefaultDiagnosis</span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div class="mb-3">
+                <div class="fw-semibold text-primary">Задание №3: Patient.ShowPatientInfo()</div>
+                <div class="p-2 bg-light rounded border small mt-1">
+                    @Model.SamplePatient.ShowPatientInfo()
+                </div>
+            </div>
+            <div>
+                <div class="fw-semibold text-primary">Задание №4: Appointment.ShowAppointment()</div>
+                <div class="p-2 bg-light rounded border small mt-1">
+                    @Model.SampleAppointment.ShowAppointment()
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="portal-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">Последние записи на приём</h4>
+                <a asp-controller="Appointments" asp-action="Index" class="btn btn-sm btn-outline-primary">Все записи</a>
+            </div>
+            @if (!Model.RecentAppointments.Any())
+            {
+                <p class="text-muted">Записей пока нет.</p>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var app in Model.RecentAppointments)
+                    {
+                        var statusBadge = app.Status switch
+                        {
+                            "Завершён" => "bg-success",
+                            "Отменён" => "bg-secondary",
+                            _ => "bg-warning text-dark"
+                        };
+                        <div class="list-group-item px-0 py-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold">@app.Patient?.Name</div>
+                                    <div class="small text-muted">
+                                        Врач: @app.Doctor?.Name
+                                        @if (app.Doctor != null)
+                                        {
+                                            <span class="spec-badge @DoctorFactory.GetBadgeCssClass(app.Doctor.Specialization) ms-1">@app.Doctor.Specialization</span>
+                                        }
+                                    </div>
+                                    <div class="small mt-1">
+                                        Дата: <strong>@app.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</strong>
+                                        @if (!string.IsNullOrWhiteSpace(app.AssignedDiagnosis))
+                                        {
+                                            <span class="ms-2">Диагноз: <span class="diagnosis-pill">@app.AssignedDiagnosis</span></span>
+                                        }
+                                    </div>
+                                </div>
+                                <span class="badge @statusBadge">
+                                    @app.Status
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

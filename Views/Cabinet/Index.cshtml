@@ -1,0 +1,129 @@
+@model MedicalPortal.Models.DoctorCabinetViewModel
+@{
+    ViewData["Title"] = "Кабинет врача";
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <div class="portal-card p-4 h-100">
+            <span class="badge bg-primary mb-2">@Model.Doctor.Specialization</span>
+            <h3 class="fw-bold mb-1">@Model.Doctor.Name</h3>
+            <p class="text-muted small mb-3">Стаж: @Model.Doctor.Experience лет | Логин: <code>@Model.Doctor.Login</code></p>
+
+            <div class="p-3 bg-light rounded border mb-3">
+                <div class="small text-muted">Метод <code>Reception()</code>:</div>
+                <div class="fw-semibold">@Model.Doctor.Reception()</div>
+            </div>
+
+            <form asp-action="UpdateDefaultDiagnosis" method="post">
+                <label class="form-label fw-semibold">Ваш профильный диагноз (который вы ставите)</label>
+                <div class="input-group">
+                    <input type="text" name="defaultDiagnosis" value="@Model.Doctor.DefaultDiagnosis" class="form-control" required />
+                    <button type="submit" class="btn btn-outline-primary">Обновить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="portal-card p-4 h-100">
+            <h4 class="fw-bold mb-3">Фильтр ваших записей на приём</h4>
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Статус</label>
+                    <select name="statusFilter" class="form-select">
+                        <option value="">Все</option>
+                        <option value="Запланирован" selected="@(Model.StatusFilter == "Запланирован")">Запланирован</option>
+                        <option value="Завершён" selected="@(Model.StatusFilter == "Завершён")">Завершён</option>
+                        <option value="Отменён" selected="@(Model.StatusFilter == "Отменён")">Отменён</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Диагноз</label>
+                    <input type="text" name="diagnosisFilter" value="@Model.DiagnosisFilter" class="form-control" placeholder="Фильтр по диагнозу" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Пациент</label>
+                    <input type="text" name="patientSearch" value="@Model.PatientSearch" class="form-control" placeholder="Имя пациента" />
+                </div>
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Применить фильтр</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Сбросить</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="portal-card p-4">
+    <h4 class="fw-bold mb-3">Ваши приёмы пациентов (@Model.Appointments.Count)</h4>
+    @if (!Model.Appointments.Any())
+    {
+        <div class="alert alert-info mb-0">У вас пока нет записей на приём по выбранному фильтру.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Дата</th>
+                        <th>Пациент</th>
+                        <th>Текущий диагноз</th>
+                        <th>Статус</th>
+                        <th style="min-width: 320px;">Провести приём и поставить диагноз</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var app in Model.Appointments)
+                    {
+                        var statusBadge = app.Status switch
+                        {
+                            "Завершён" => "bg-success",
+                            "Отменён" => "bg-secondary",
+                            _ => "bg-warning text-dark"
+                        };
+                        <tr>
+                            <td class="fw-semibold text-nowrap">@app.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                <div class="fw-semibold">@app.Patient?.Name</div>
+                                <div class="small text-muted">Возраст: @app.Patient?.Age лет</div>
+                            </td>
+                            <td>
+                                <span class="diagnosis-pill">
+                                    @(!string.IsNullOrWhiteSpace(app.AssignedDiagnosis) ? app.AssignedDiagnosis : app.Patient?.Diagnosis)
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge @statusBadge">@app.Status</span>
+                                @if (!string.IsNullOrWhiteSpace(app.ReceptionReport))
+                                {
+                                    <div class="small text-muted mt-1">@app.ReceptionReport</div>
+                                }
+                            </td>
+                            <td>
+                                @if (app.Status == "Отменён")
+                                {
+                                    <span class="text-muted small">Приём отменён</span>
+                                }
+                                else
+                                {
+                                    <form asp-action="ConductReception" method="post" class="d-flex gap-2">
+                                        <input type="hidden" name="appointmentId" value="@app.Id" />
+                                        <input type="text" name="diagnosis"
+                                               value="@(string.IsNullOrWhiteSpace(app.AssignedDiagnosis) ? Model.Doctor.DefaultDiagnosis : app.AssignedDiagnosis)"
+                                               class="form-control form-control-sm"
+                                               placeholder="Диагноз врача" />
+                                        <button type="submit" class="btn btn-sm btn-success text-nowrap">
+                                            @(app.Status == "Завершён" ? "Обновить диагноз" : "Провести приём")
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
